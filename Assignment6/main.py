@@ -1,55 +1,42 @@
-import numpy as np
+def distance(point1, point2, m):
+    return sum((point1[i] - point2[i]) ** 2 for i in range(m))
 
-def centerToCluster(data, centers, clusters, k):
-    for item in data:
-        #find closest cluseter to center
-        mu_index = min([(i[0], np.linalg.norm(item - centers[i[0]])) \
-                        for i in enumerate(centers)], key=lambda t: t[1])[0]
-        try:
-            clusters[mu_index].append(item)
-        except KeyError:
-            clusters[mu_index] = [item]
-
-    for cluster in clusters:
-        if not cluster:
-            centers.append(data[np.random.randint(0, k)])
-            #cluster.append(data[np.random.randint(0, len(data), size=1)].flatten().tolist())
-    return clusters
-
-def clustertoCenter():
-    newCenter = 0
-    return newCenter
-
-def randomCenters(d, centers, k):
-    for cluster in range(0, k):
-        #centers.append(d[np.random.randint(0, len(d), size=1)].flatten().tolist())
-        centers.append(d[np.random.randint(0,k)])
+def kmeans(k, m, data):
+    centers = [data[i] for i in range(k)]
+    sizes = float("inf")
+    while sizes > 0:
+        new_centers = centerCluster(k, m, data, centers)
+        sizes = sum([distance(new_centers[i], centers[i], m) for i in range(k)])
+        centers = new_centers[:]
     return centers
 
+def centerCluster(k, m, data, center):
+    def nearest(p):
+        index = -1
+        best = float('inf')
+        for i in range(k):
+            dist = distance(p, center[i], m)
+            if dist < best:
+                index = i
+                best = dist
+        return index
 
-def llyodAlgo(k, m, data):
-    centers = []
-    centers = randomCenters(data, centers, k)
-    #print(centers)
-    oldCent = [[] for i in range(k)]
+    def centers(i, index):
+        count = 0
+        point = [0 for j in range(m)]
+        for j in range(len(data)):
+            if index[j] == i:
+                count += 1
+                for l in range(m):
+                    point[l] += data[j][l]
+        return [p / max(count, 1) for p in point]
 
-    while not (oldCent == centers):
-        clusters = [[] for i in range(k)]
-        clusters = centerToCluster(data, centers, clusters, k)
-
-        index = 0
-        for cluster in clusters:
-            oldCent[index] = centers[index]
-            centers[index] = np.mean(cluster, axis=0).tolist()
-            index += 1
-
-    return centers
-
+    index = [nearest(p) for p in data]
+    return [centers(i, index) for i in range(k)]
 
 k = 2
 m = 2
 data = [[2, 2],[1.3, 1.1],[1.3, 0.2],[0.6, 2.8],
 [3.0, 3.2],[1.2, 0.7],[1.4, 1.6],[1.2, 1.0],
 [1.2, 1.1],[0.6, 1.5],[1.8, 2.6],[1.2, 1.3],[1.2, 1.0],[0.0, 1.9]]
-
-print(llyodAlgo(k, m, data))
+print(kmeans(k,m, data))
